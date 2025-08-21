@@ -1,0 +1,79 @@
+version: '3.8'
+
+networks:
+  secure-chat-network:
+    driver: bridge
+
+volumes:
+  secure_chat_db_data:
+  secure_cha_redis_data:
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: db
+    networks:
+      secure-chat-network: { }
+    restart: always
+    volumes:
+      - secure_chat_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    networks:
+      secure-chat-network: { }
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - secure_cha_redis_data:/data
+
+
+  backend-dev:
+    build:
+      context: .
+      target: development
+    container_name: chat-backend-dev
+    networks:
+      secure-chat-network: { }
+    restart: always
+    env_file:
+      - .env.example
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - .env.example:/app/.env
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      REDIS_HOST: redis
+    profiles:
+      - dev
+
+
+  backend-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: chat-backend-prod
+    networks:
+      secure-chat-network: { }
+    ports:
+      - "5000:5000"
+    env_file: env.example
+    depends_on:
+      - db
+      - redis
+    restart: always
+    profiles:
+      - prod
