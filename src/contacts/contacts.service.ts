@@ -1,8 +1,16 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contact, ContactStatus } from './entities/contact.entity';
 import { UsersService } from '../users/users.service';
+import { ChatGateway } from '../chat/chat.gateway';
 
 @Injectable()
 export class ContactsService {
@@ -10,8 +18,9 @@ export class ContactsService {
     @InjectRepository(Contact)
     private readonly contactsRepository: Repository<Contact>,
     private readonly usersService: UsersService,
-  ) {
-  }
+    @Inject(forwardRef(() => ChatGateway))
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   async sendRequest(requesterId: string, addresseeId: string): Promise<Contact> {
     if (requesterId === addresseeId) {
@@ -42,7 +51,11 @@ export class ContactsService {
       status: ContactStatus.PENDING,
     });
 
-    return this.contactsRepository.save(newRequest);
+    const savedRequest = await this.contactsRepository.save(newRequest);
+
+    this.chatGateway.sendContactRequest(addresseeId, savedRequest);
+
+    return savedRequest;
   }
 
   async getContacts(userId: string): Promise<Contact[]> {
@@ -51,6 +64,7 @@ export class ContactsService {
         { requester: { id: userId }, status: ContactStatus.ACCEPTED },
         { addressee: { id: userId }, status: ContactStatus.ACCEPTED },
       ],
+      relations: ['requester', 'addressee'],
     });
   }
 
@@ -60,6 +74,7 @@ export class ContactsService {
         addressee: { id: userId },
         status: ContactStatus.PENDING,
       },
+      relations: ['requester', 'addressee'],
     });
   }
 
@@ -68,7 +83,10 @@ export class ContactsService {
     contactId: string,
     newStatus: ContactStatus.ACCEPTED | ContactStatus.REJECTED,
   ): Promise<Contact> {
-    const request = await this.contactsRepository.findOneBy({ id: contactId });
+    const request = await this.contactsRepository.findOne({
+      where: { id: contactId },
+      relations: ['requester', 'addressee'],
+    });
 
     if (!request) {
       throw new NotFoundException('Solicitação não encontrada.');
@@ -83,24 +101,12 @@ export class ContactsService {
     }
 
     request.status = newStatus;
-    return this.contactsRepository.save(request);
-  }
+    const updatedContact = await this.contactsRepository.save(request);
 
-  async areUsersContacts(userId1: string, userId2: string): Promise<boolean> {
-    const contact = await this.contactsRepository.findOne({
-      where: [
-        {
-          requester: { id: userId1 },
-          addressee: { id: userId2 },
-          status: ContactStatus.ACCEPTED,
-        },
-        {
-          requester: { id: userId2 },
-          addressee: { id: userId1 },
-          status: ContactStatus.ACCEPTED,
-        },
-      ],
-    });
-    return !!contact;
+    if (newStatus === ContactStatus.ACCEPTED) {
+      this.chatGateway.notifyNewContact(request.requester.id, request.addressee.id);
+    }
+
+    return updatedContact;
   }
 }

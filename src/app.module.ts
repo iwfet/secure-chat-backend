@@ -1,16 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-store';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ChatModule } from './chat/chat.module';
 import { User } from './users/entities/user.entity';
 import { ContactsModule } from './contacts/contacts.module';
 import { Contact } from './contacts/entities/contact.entity';
-import { ThrottlerGuard, ThrottlerModule } from 'nestjs-throttler';
-import { APP_GUARD } from '@nestjs/core';
-import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -25,7 +23,6 @@ import { redisStore } from 'cache-manager-redis-store';
       useFactory: async (configService: ConfigService) => {
         const host = configService.get<string>('REDIS_HOST', 'localhost');
         const port = configService.get<number>('REDIS_PORT', 6379);
-
         return {
           store: await redisStore({
             url: `redis://${host}:${port}`,
@@ -47,23 +44,10 @@ import { redisStore } from 'cache-manager-redis-store';
         synchronize: true,
       }),
     }),
-    ThrottlerModule.forRoot(
-      {
-        ttl: 60000, // 60 segundos
-        limit: 20,  // 20 requisições por minuto por IP
-      },
-    ),
     AuthModule,
     UsersModule,
     ChatModule,
     ContactsModule,
   ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-  ],
 })
-export class AppModule {
-}
+export class AppModule {}

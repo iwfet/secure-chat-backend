@@ -7,5 +7,5 @@ export class CreateMessageDto {
 
   @IsString()
   @IsNotEmpty()
-  encryptedContent: string; // Esperamos o conteúdo como uma string base64
+  encryptedContent: string;
 }

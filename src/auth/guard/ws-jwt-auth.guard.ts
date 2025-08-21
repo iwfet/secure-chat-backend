@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from '../../users/users.service';
 
 @Injectable()
 export class WsJwtAuthGuard implements CanActivate {
@@ -27,7 +27,6 @@ export class WsJwtAuthGuard implements CanActivate {
         throw new WsException('Usuário não encontrado.');
       }
 
-      // Anexa o usuário ao objeto do socket para uso posterior
       client.data.user = user;
       return true;
 

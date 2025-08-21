@@ -7,26 +7,18 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Segurança: Adiciona headers de segurança HTTP
   app.use(helmet());
 
-  // Habilita CORS
   app.enableCors({
-    // Lê a URL do frontend do arquivo .env
-    // Se a variável não estiver definida, nenhuma origem será permitida.
     origin: 'http://localhost:5173',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // Permite que o frontend envie credenciais (como tokens)
+    credentials: true,
   });
 
-  // Validação Global: Garante que todos os dados de entrada são validados
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-
-  // Documentação da API com Swagger
   const config = new DocumentBuilder()
     .setTitle('Secure Chat API')
     .setDescription('API para o sistema de chat seguro com E2EE')
