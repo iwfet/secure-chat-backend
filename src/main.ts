@@ -11,7 +11,13 @@ async function bootstrap() {
   app.use(helmet());
 
   // Habilita CORS
-  app.enableCors();
+  app.enableCors({
+    // Lê a URL do frontend do arquivo .env
+    // Se a variável não estiver definida, nenhuma origem será permitida.
+    origin: 'http://localhost:5173',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // Permite que o frontend envie credenciais (como tokens)
+  });
 
   // Validação Global: Garante que todos os dados de entrada são validados
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

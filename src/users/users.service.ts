@@ -1,14 +1,15 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
@@ -22,11 +23,28 @@ export class UsersService {
     return result;
   }
 
-  async findOneByUsername(username:string): Promise<User | null> {
+  async findOneByUsername(username: string): Promise<User | null> {
     return this.usersRepository.findOneBy({ username });
   }
 
   async findOneById(id: string): Promise<User | null> {
     return this.usersRepository.findOneBy({ id });
+  }
+
+  async searchByUsername(
+    username: string,
+  ): Promise<Pick<User, 'id' | 'username'>[]> {
+    if (!username || username.length < 3) {
+      return [];
+    }
+
+    const users = await this.usersRepository.find({
+      where: {
+        username: Like(`%${username}%`),
+      },
+      select: ['id', 'username'],
+      take: 10,
+    });
+    return users;
   }
 }

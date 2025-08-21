@@ -10,8 +10,6 @@ export class User {
   username: string;
 
   @Column()
-  @Exclude() // Garante que este campo nunca seja retornado em respostas JSON
+  @Exclude()
   password: string;
-
-  // Adicionar campos de 2FA aqui, se necessário
 }

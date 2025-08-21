@@ -1,6 +1,3 @@
-// Documentação: Este é o módulo raiz. Ele junta todos os outros módulos
-// e configura as conexões globais, como a com o banco de dados.
-
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { ChatModule } from './chat/chat.module';
 import { User } from './users/entities/user.entity';
 import { Message } from './chat/entities/message.entity';
+import { ContactsModule } from './contacts/contacts.module';
+import { Contact } from './contacts/entities/contact.entity';
 
 @Module({
   imports: [
@@ -19,27 +18,21 @@ import { Message } from './chat/entities/message.entity';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const isDev= configService.get('NODE_ENV') !== 'production'
-        return {
-          type: 'postgres',
-            host: configService.get<string>('DB_HOST'),
-          port: configService.get<number>('DB_PORT', 5432),
-          username: configService.get<string>('DB_USERNAME'),
-          password: configService.get<string>('DB_PASSWORD'),
-          database: configService.get<string>('DB_DATABASE'),
-          entities: [User, Message],
-          synchronize: isDev,
-          logging: isDev,
-          retryAttempts: 3,
-          parseInt8: true,
-          poolSize: configService.get<number>('DB_POOL_MAX', 50),
-        }
-      },
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT', 5432),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_DATABASE'),
+        entities: [User, Message, Contact],
+        synchronize: true,
+      }),
     }),
     AuthModule,
     UsersModule,
     ChatModule,
+    ContactsModule,
   ],
 })
 export class AppModule {}

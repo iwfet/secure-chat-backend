@@ -20,7 +20,7 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
-    const saltRounds = 20;
+    const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
     return this.usersService.create({
       username: createUserDto.username,

@@ -12,12 +12,18 @@ export class Message {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, { eager: true }) // eager: true carrega o usuário automaticamente
+  @ManyToOne(() => User, { eager: true, onDelete: 'CASCADE' })
   fromUser: User;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => User, { eager: true, onDelete: 'CASCADE' })
   toUser: User;
 
   @Column({ type: 'bytea' })
   encryptedContent: Buffer;
+
+  @Column({ default: false })
+  read: boolean;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }
