@@ -5,15 +5,33 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ChatModule } from './chat/chat.module';
 import { User } from './users/entities/user.entity';
-import { Message } from './chat/entities/message.entity';
 import { ContactsModule } from './contacts/contacts.module';
 import { Contact } from './contacts/entities/contact.entity';
+import { ThrottlerGuard, ThrottlerModule } from 'nestjs-throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-store';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        const host = configService.get<string>('REDIS_HOST', 'localhost');
+        const port = configService.get<number>('REDIS_PORT', 6379);
+
+        return {
+          store: await redisStore({
+            url: `redis://${host}:${port}`,
+          }),
+        };
+      },
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -25,14 +43,27 @@ import { Contact } from './contacts/entities/contact.entity';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
-        entities: [User, Message, Contact],
+        entities: [User, Contact],
         synchronize: true,
       }),
     }),
+    ThrottlerModule.forRoot(
+      {
+        ttl: 60000, // 60 segundos
+        limit: 20,  // 20 requisições por minuto por IP
+      },
+    ),
     AuthModule,
     UsersModule,
     ChatModule,
     ContactsModule,
   ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule {
+}

@@ -1,11 +1,6 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Contact, ContactStatus } from './entities/contact.entity';
 import { UsersService } from '../users/users.service';
 
@@ -15,7 +10,8 @@ export class ContactsService {
     @InjectRepository(Contact)
     private readonly contactsRepository: Repository<Contact>,
     private readonly usersService: UsersService,
-  ) {}
+  ) {
+  }
 
   async sendRequest(requesterId: string, addresseeId: string): Promise<Contact> {
     if (requesterId === addresseeId) {
@@ -88,5 +84,23 @@ export class ContactsService {
 
     request.status = newStatus;
     return this.contactsRepository.save(request);
+  }
+
+  async areUsersContacts(userId1: string, userId2: string): Promise<boolean> {
+    const contact = await this.contactsRepository.findOne({
+      where: [
+        {
+          requester: { id: userId1 },
+          addressee: { id: userId2 },
+          status: ContactStatus.ACCEPTED,
+        },
+        {
+          requester: { id: userId2 },
+          addressee: { id: userId1 },
+          status: ContactStatus.ACCEPTED,
+        },
+      ],
+    });
+    return !!contact;
   }
 }

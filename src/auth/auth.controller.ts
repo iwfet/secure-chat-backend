@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { LocalAuthGuard } from './guard/local-auth.guard';
+import { Throttle } from 'nestjs-throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -12,6 +13,7 @@ export class AuthController {
     private usersService: UsersService,
   ) {}
 
+  @Throttle(  5,  60000  )
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req) {
