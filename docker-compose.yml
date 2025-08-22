@@ -39,7 +39,7 @@ services:
   backend-dev:
     build:
       context: .
-      target: development
+      dockerfile: Dockerfile.dev
     container_name: chat-backend-dev
     networks:
       secure-chat-network: { }
@@ -56,24 +56,3 @@ services:
       NODE_ENV: development
       DB_HOST: db
       REDIS_HOST: redis
-    profiles:
-      - dev
-
-
-  backend-prod:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    container_name: chat-backend-prod
-    networks:
-      secure-chat-network: { }
-    ports:
-      - "5000:5000"
-    env_file: env.example
-    depends_on:
-      - db
-      - redis
-    restart: always
-    profiles:
-      - prod

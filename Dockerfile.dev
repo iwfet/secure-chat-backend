@@ -1,0 +1,20 @@
+FROM node:22-alpine
+WORKDIR /app
+
+# Instala o pnpm
+RUN npm install -g pnpm
+
+# Copia os ficheiros de manifesto
+COPY package.json pnpm-lock.yaml ./
+
+# Instala todas as dependências, incluindo as de desenvolvimento
+RUN pnpm install
+
+# Copia o resto do código. Num ambiente de desenvolvimento com volumes,
+# esta linha pode ser opcional, mas é uma boa prática tê-la.
+COPY . .
+
+EXPOSE 5000
+
+# O comando para iniciar em modo de desenvolvimento (observando alterações)
+CMD ["pnpm", "run", "start:dev"]
