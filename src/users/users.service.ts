@@ -14,7 +14,7 @@ export class UsersService {
   async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
     const existingUser = await this.findOneByUsername(createUserDto.username);
     if (existingUser) {
-      throw new ConflictException('O nome de usuário já existe.');
+      throw new ConflictException('usuário/senha ja existe.');
     }
     const user = this.usersRepository.create(createUserDto);
     const savedUser = await this.usersRepository.save(user);
