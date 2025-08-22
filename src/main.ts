@@ -9,8 +9,18 @@ async function bootstrap() {
 
   app.use(helmet());
 
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'https://localhost:5173',
+  ];
+
+  const frontendUrl = process.env.FRONTEND_URL;
+  if (frontendUrl) {
+    allowedOrigins.push(frontendUrl);
+  }
+
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
