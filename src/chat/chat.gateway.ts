@@ -120,7 +120,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     const fromUser = client.data.user as User;
-
     const toUserData = await this.cacheManager.get<OnlineUserData>(this.getKeyForUser(createMessageDto.toUserId));
 
     if (toUserData) {
