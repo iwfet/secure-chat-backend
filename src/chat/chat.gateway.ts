@@ -29,6 +29,7 @@ interface OnlineContactPayload {
   userId: string;
   status: 'online';
   publicKey: string;
+  socketId: string;
 }
 
 @WebSocketGateway({ cors: true })
@@ -66,7 +67,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const contacts = await this.contactsService.getContacts(user.id);
 
-      const onlinePayload = { userId: user.id, status: 'online', publicKey };
+      const onlinePayload = { userId: user.id, status: 'online' as const, publicKey, socketId: client.id };
       for (const contact of contacts) {
         const contactId = contact.requester.id === user.id ? contact.addressee.id : contact.requester.id;
         const contactData = await this.cacheManager.get<OnlineUserData>(this.getKeyForUser(contactId));
@@ -84,6 +85,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             userId: contactId,
             status: 'online',
             publicKey: contactData.publicKey,
+            socketId: contactData.socketId,
           });
         }
       }
@@ -119,20 +121,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() createMessageDto: CreateMessageDto,
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
-    const fromUser = client.data.user as User;
-    const toUserData = await this.cacheManager.get<OnlineUserData>(this.getKeyForUser(createMessageDto.toUserId));
+    const isRecipientOnline = this.server.sockets.sockets.has(createMessageDto.toSocketId);
 
-    if (toUserData) {
+    if (isRecipientOnline) {
+      const fromUser = client.data.user as User;
       const messagePayload = {
         fromUserId: fromUser.id,
         encryptedContent: createMessageDto.encryptedContent,
         createdAt: new Date(),
       };
-      this.server.to(toUserData.socketId).emit('newMessage', messagePayload);
-    } else {
+
+      this.server.to(createMessageDto.toSocketId).emit('newMessage', messagePayload);
+    }
+    else {
       client.emit('sendMessageError', {
-        message: 'O destinatário não está online.',
-        toUserId: createMessageDto.toUserId,
+        message: 'O destinatário ficou offline ou a conexão é inválida.',
+        toSocketId: createMessageDto.toSocketId,
       });
     }
   }

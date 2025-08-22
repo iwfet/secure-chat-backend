@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 export class CreateMessageDto {
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
-  toUserId: string;
+  toSocketId: string;
 
   @IsString()
   @IsNotEmpty()
