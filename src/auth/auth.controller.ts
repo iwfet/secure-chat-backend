@@ -20,6 +20,7 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
+  @Throttle(  10,  60000  )
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     const saltRounds = 17;

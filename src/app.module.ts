@@ -9,6 +9,7 @@ import { ChatModule } from './chat/chat.module';
 import { User } from './users/entities/user.entity';
 import { ContactsModule } from './contacts/contacts.module';
 import { Contact } from './contacts/entities/contact.entity';
+import { ThrottlerModule } from 'nestjs-throttler';
 
 @Module({
   imports: [
@@ -16,6 +17,12 @@ import { Contact } from './contacts/entities/contact.entity';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ThrottlerModule.forRoot(
+      {
+        ttl: 60000, // 1 minuto
+        limit: 20, // 20 requisições por minuto por IP
+      },
+    ),
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
