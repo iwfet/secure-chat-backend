@@ -22,7 +22,10 @@ export class ContactsService {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  async sendRequest(requesterId: string, addresseeId: string): Promise<Contact> {
+  async sendRequest(
+    requesterId: string,
+    addresseeId: string,
+  ): Promise<Contact> {
     if (requesterId === addresseeId) {
       throw new ConflictException('Você não pode adicionar a si mesmo.');
     }
@@ -104,7 +107,7 @@ export class ContactsService {
     const updatedContact = await this.contactsRepository.save(request);
 
     if (newStatus === ContactStatus.ACCEPTED) {
-      this.chatGateway.notifyNewContact(request.requester.id, request.addressee.id);
+      this.chatGateway.notifyNewContact(updatedContact);
     }
 
     return updatedContact;
