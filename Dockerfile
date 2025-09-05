@@ -1,6 +1,6 @@
 # --- Fase 1: Builder ---
 # Esta fase instala dependências e constrói a aplicação
-FROM node:22-alpine AS builder
+FROM node:22.17.0-alpine3.22 AS builder
 WORKDIR /app
 
 # Instala o pnpm
@@ -20,7 +20,7 @@ RUN pnpm run build
 
 
 
-FROM node:22-alpine AS production
+FROM node:22.17.0-alpine3.22AS production
 WORKDIR /app
 
 # Instala o pnpm

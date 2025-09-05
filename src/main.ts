@@ -15,6 +15,7 @@ async function bootstrap() {
   ];
 
   const frontendUrl = process.env.FRONTEND_URL;
+  console.log(frontendUrl)
   if (frontendUrl) {
     allowedOrigins.push(frontendUrl);
   }
