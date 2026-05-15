@@ -4,7 +4,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Instala o pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.33.0
 
 # Copia apenas os ficheiros de manifesto para otimizar o cache do Docker
 COPY package.json pnpm-lock.yaml ./
@@ -24,7 +24,7 @@ FROM node:22-alpine AS production
 WORKDIR /app
 
 # Instala o pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.33.0
 
 # Copia os ficheiros de manifesto de pacotes
 COPY package.json pnpm-lock.yaml ./
